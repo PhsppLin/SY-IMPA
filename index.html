@@ -627,9 +627,29 @@ function renderResults(results) {
               <div class="detail-item-val" style="color:${color}">${simPct}%</div>
             </div>
           </div>
-          <button class="copy-btn" id="copy-${i}" onclick="copyCode(event, '${r.code}', ${i})">
-            複製 IMPA Code：${r.code}
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button class="copy-btn" id="copy-${i}" style="flex:1" onclick="copyCode(event, '${r.code}', ${i})">
+              複製 IMPA Code：${r.code}
+            </button>
+            <a href="https://impa-catalogue.shipserv.com/search?type=IMPA&text=${r.code}"
+               target="_blank"
+               style="flex:1;display:flex;align-items:center;justify-content:center;
+                      padding:8px;border-radius:var(--radius-sm);
+                      background:rgba(255,255,255,0.04);
+                      border:0.5px solid var(--border2);
+                      color:var(--text2);font-size:12px;font-weight:500;
+                      text-decoration:none;transition:background 0.2s;"
+               onmouseover="this.style.background='rgba(255,255,255,0.08)'"
+               onmouseout="this.style.background='rgba(255,255,255,0.04)'"
+               onclick="event.stopPropagation()">
+              查看商品圖片 ↗
+            </a>
+          </div>
+          <button class="copy-btn" style="margin-top:8px;width:100%;color:var(--accent3);border-color:rgba(96,165,250,0.3);background:rgba(37,99,235,0.06);"
+            onclick="loadVariants(event, '${r.title.replace(/'/g,"\\'")}', '${r.code}', ${i})">
+            查看「${r.title}」的其他規格
           </button>
+          <div id="variants-${i}" style="margin-top:8px;display:none;"></div>
         </div>
       </div>`;
   }).join('');
@@ -651,6 +671,69 @@ function copyCode(e, code, i) {
       btn.classList.remove('copied');
     }, 2000);
   });
+}
+
+async function loadVariants(e, title, currentCode, cardIdx) {
+  e.stopPropagation();
+  const container = document.getElementById(`variants-${cardIdx}`);
+
+  // 切換顯示
+  if (container.style.display === 'block') {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+  container.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0;">載入中...</div>';
+
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const { data, error } = await sb
+      .from('impa_items')
+      .select('code, specification, specification_cht, unit')
+      .eq('title', title)
+      .neq('code', currentCode)
+      .limit(20);
+
+    if (error) throw error;
+    if (!data || !data.length) {
+      container.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0;">此品項無其他規格</div>';
+      return;
+    }
+
+    container.innerHTML = `
+      <div style="font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:0.05em;">
+        同系列其他 ${data.length} 種規格
+      </div>` +
+      data.map(v => `
+        <div style="background:var(--surface2);border-radius:6px;padding:8px 10px;margin-bottom:5px;
+                    border:0.5px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+            <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2)">${v.code}</span>
+            <span style="font-size:10px;color:var(--text3)">${v.unit || ''}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text);line-height:1.5;margin-bottom:2px;">${v.specification || ''}</div>
+          <div style="font-size:11px;color:var(--text2);line-height:1.5;">${v.specification_cht || ''}</div>
+          <div style="display:flex;gap:6px;margin-top:6px;">
+            <button onclick="event.stopPropagation();navigator.clipboard.writeText('${v.code}');this.textContent='✓ 已複製';setTimeout(()=>this.textContent='複製',2000)"
+              style="flex:1;padding:5px;background:rgba(37,99,235,0.1);border:0.5px solid rgba(37,99,235,0.25);
+                     border-radius:5px;color:var(--accent2);font-size:11px;cursor:pointer;
+                     font-family:'Noto Sans TC',sans-serif;">
+              複製
+            </button>
+            <a href="https://impa-catalogue.shipserv.com/search?type=IMPA&text=${v.code}"
+               target="_blank" onclick="event.stopPropagation()"
+               style="flex:1;display:flex;align-items:center;justify-content:center;
+                      padding:5px;background:rgba(255,255,255,0.04);
+                      border:0.5px solid var(--border2);border-radius:5px;
+                      color:var(--text2);font-size:11px;text-decoration:none;">
+              查看圖片 ↗
+            </a>
+          </div>
+        </div>`).join('');
+  } catch(err) {
+    container.innerHTML = `<div style="font-size:12px;color:var(--text3);padding:8px 0;">載入失敗：${err.message}</div>`;
+  }
 }
 </script>
 </body>
