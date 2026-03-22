@@ -124,6 +124,13 @@
 
   /* SEARCH AREA */
   .search-area { padding: 1.25rem 1rem 0.75rem; max-width: 720px; margin: 0 auto; }
+  .search-sticky {
+    position: sticky; top: 53px; z-index: 90;
+    background: rgba(10,14,26,0.95);
+    backdrop-filter: blur(16px);
+    border-bottom: 0.5px solid var(--border);
+    padding-bottom: 0.5rem;
+  }
   .search-box {
     display: flex; gap: 8px; align-items: center;
     background: var(--surface);
@@ -350,6 +357,7 @@
     <button class="logout-btn" onclick="doLogout()">登出</button>
   </div>
 
+  <div class="search-sticky">
   <div class="search-area">
     <div class="search-box">
       <span class="search-icon">🔍</span>
@@ -399,6 +407,7 @@
       </button>
       <button class="clear-btn" onclick="clearSearch()">清除</button>
     </div>
+  </div>
   </div>
 
   <div class="quick-tags">
