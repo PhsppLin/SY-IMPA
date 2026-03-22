@@ -125,9 +125,9 @@
   /* SEARCH AREA */
   .search-area { padding: 1.25rem 1rem 0.75rem; max-width: 720px; margin: 0 auto; }
   .search-sticky {
-    position: sticky; top: 53px; z-index: 90;
-    background: rgba(10,14,26,0.95);
-    backdrop-filter: blur(16px);
+    position: sticky; top: 0; z-index: 90;
+    background: rgba(10,14,26,0.97);
+    backdrop-filter: blur(20px);
     border-bottom: 0.5px solid var(--border);
     padding-bottom: 0.5rem;
   }
@@ -251,10 +251,10 @@
     background: var(--surface2); color: var(--text2);
   }
   .sim-wrap { display: flex; align-items: center; gap: 5px; margin-left: auto; }
-  .sim-label { font-size: 10px; color: var(--text3); }
+  .sim-label { font-size: 10px; color: #94a3b8; }
   .sim-bar { width: 48px; height: 3px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
   .sim-fill { height: 100%; border-radius: 2px; }
-  .sim-pct { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--text2); min-width: 32px; text-align: right; }
+  .sim-pct { font-size: 10px; font-family: 'DM Mono', monospace; color: #fbbf24; min-width: 32px; text-align: right; }
   .expand-arrow { font-size: 12px; color: var(--text3); flex-shrink: 0; transition: transform 0.2s; }
   .result-card.expanded .expand-arrow { transform: rotate(180deg); }
 
@@ -408,9 +408,7 @@
       <button class="clear-btn" onclick="clearSearch()">清除</button>
     </div>
   </div>
-  </div>
-
-  <div class="quick-tags">
+  <div class="quick-tags" style="padding-top:0;margin-top:0;">
     <div class="quick-label">熱門搜尋</div>
     <div class="tag-row">
       <span class="q-tag" onclick="quickSearch('充氣救生筏')">充氣救生筏</span>
@@ -421,6 +419,7 @@
       <span class="q-tag" onclick="quickSearch('軸承 內徑 10mm')">軸承 內徑 10mm</span>
       <span class="q-tag" onclick="quickSearch('oxygen cylinder')">Oxygen cylinder</span>
     </div>
+  </div>
   </div>
 
   <div class="results-area">
@@ -645,9 +644,9 @@ async function fetchResults(query, cat, offset) {
 }
 
 function simColor(sim) {
-  if (sim >= 0.75) return '#34d399';
-  if (sim >= 0.55) return '#fbbf24';
-  return '#94a3b8';
+  if (sim >= 0.75) return '#fbbf24';  // 亮黃
+  if (sim >= 0.55) return '#fbbf24';  // 亮黃
+  return '#fbbf24';                    // 統一亮黃，讓數字清晰可見
 }
 
 function renderResults(results, append = false, startIdx = 0) {
