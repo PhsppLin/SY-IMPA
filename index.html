@@ -272,7 +272,11 @@
   .detail-item { background: var(--surface2); border-radius: 6px; padding: 8px 10px; }
   .detail-item-label { font-size: 10px; color: var(--text3); margin-bottom: 3px; }
   .detail-item-val { font-size: 13px; font-weight: 500; }
-  .copy-btn {
+  .keyword-badge {
+    font-size: 10px; padding: 2px 7px; border-radius: 3px;
+    background: rgba(52,211,153,0.12); color: #34d399;
+    border: 0.5px solid rgba(52,211,153,0.25);
+  }
     margin-top: 10px; width: 100%; padding: 8px;
     background: rgba(37,99,235,0.1);
     border: 0.5px solid rgba(37,99,235,0.3);
@@ -297,7 +301,18 @@
   .rag-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; letter-spacing: 0.05em; }
   .rag-content { font-size: 13px; color: var(--text2); line-height: 1.7; }
 
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .load-more-btn {
+    width: 100%; padding: 12px;
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text2); font-size: 13px; font-weight: 500;
+    cursor: pointer; margin-top: 8px;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: background 0.2s, color 0.2s;
+  }
+  .load-more-btn:hover { background: var(--surface2); color: var(--text); }
+  .load-more-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
   @media (min-width: 640px) {
@@ -419,6 +434,7 @@
 
     <div class="result-meta" id="result-meta" style="display:none"></div>
     <div id="results-list"></div>
+    <button class="load-more-btn" id="load-more-btn" style="display:none" onclick="loadMore()">載入更多</button>
   </div>
 </div>
 
@@ -494,6 +510,11 @@ document.getElementById('email-input').addEventListener('keydown', e => { if (e.
 document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
 
 // ── SEARCH ──
+let currentQuery = '';
+let currentCat   = 'all';
+let currentOffset = 0;
+const PAGE_SIZE   = 10;
+
 function quickSearch(text) {
   document.getElementById('search-input').value = text;
   doSearch();
@@ -507,6 +528,8 @@ function clearSearch() {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('empty-state').style.display = 'block';
   document.getElementById('rag-block').style.display = 'none';
+  document.getElementById('load-more-btn').style.display = 'none';
+  currentOffset = 0;
 }
 
 async function doSearch() {
@@ -516,34 +539,24 @@ async function doSearch() {
 
   if (!query) return;
 
+  // 重置狀態
+  currentQuery  = query;
+  currentCat    = cat;
+  currentOffset = 0;
+
   document.getElementById('empty-state').style.display = 'none';
   document.getElementById('loading').style.display = 'block';
   document.getElementById('results-list').innerHTML = '';
   document.getElementById('result-meta').style.display = 'none';
+  document.getElementById('load-more-btn').style.display = 'none';
   btn.disabled = true;
 
   try {
-    const { data: { session } } = await sb.auth.getSession();
-    const token = session?.access_token;
-
-    const res = await fetch(EDGE_FN_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-        'apikey': SUPABASE_ANON,
-      },
-      body: JSON.stringify({ query, category_code: cat, limit: 10 })
-    });
-
-    const json = await res.json();
+    const results = await fetchResults(query, cat, 0);
     document.getElementById('loading').style.display = 'none';
     btn.disabled = false;
 
-    if (json.error) throw new Error(json.error);
-
-    const results = json.results || [];
-    if (!results.length) {
+    if (!results.results.length) {
       document.getElementById('empty-state').style.display = 'block';
       document.getElementById('empty-state').innerHTML =
         '<div class="empty-icon">😔</div>找不到相關結果<br><span style="font-size:12px">請嘗試其他描述</span>';
@@ -551,8 +564,17 @@ async function doSearch() {
     }
 
     document.getElementById('result-meta').style.display = 'block';
-    document.getElementById('result-meta').textContent = `找到 ${results.length} 筆相關結果`;
-    renderResults(results);
+    document.getElementById('result-meta').textContent =
+      `共找到 ${results.total} 筆相關結果，目前顯示前 ${results.results.length} 筆`;
+
+    renderResults(results.results, false);
+    currentOffset = results.results.length;
+
+    if (results.has_more) {
+      const btn2 = document.getElementById('load-more-btn');
+      btn2.style.display = 'block';
+      btn2.textContent = `載入更多（還有 ${results.total - currentOffset} 筆）`;
+    }
 
   } catch(e) {
     document.getElementById('loading').style.display = 'none';
@@ -563,22 +585,73 @@ async function doSearch() {
   }
 }
 
+async function loadMore() {
+  const btn = document.getElementById('load-more-btn');
+  btn.disabled = true;
+  btn.textContent = '載入中...';
+
+  try {
+    const results = await fetchResults(currentQuery, currentCat, currentOffset);
+    const currentCount = document.getElementById('results-list').children.length;
+    renderResults(results.results, true, currentCount);
+    currentOffset += results.results.length;
+
+    document.getElementById('result-meta').textContent =
+      `共找到 ${results.total} 筆相關結果，目前顯示前 ${currentOffset} 筆`;
+
+    if (results.has_more) {
+      btn.disabled = false;
+      btn.textContent = `載入更多（還有 ${results.total - currentOffset} 筆）`;
+    } else {
+      btn.style.display = 'none';
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '載入失敗，請重試';
+  }
+}
+
+async function fetchResults(query, cat, offset) {
+  const { data: { session } } = await sb.auth.getSession();
+  const token = session?.access_token;
+
+  const res = await fetch(EDGE_FN_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      'apikey': SUPABASE_ANON,
+    },
+    body: JSON.stringify({
+      query,
+      category_code: cat,
+      limit: PAGE_SIZE,
+      offset,
+    })
+  });
+
+  const json = await res.json();
+  if (json.error) throw new Error(json.error);
+  return json;
+}
+
 function simColor(sim) {
   if (sim >= 0.75) return '#34d399';
   if (sim >= 0.55) return '#fbbf24';
   return '#94a3b8';
 }
 
-function renderResults(results) {
+function renderResults(results, append = false, startIdx = 0) {
   const list = document.getElementById('results-list');
-  list.innerHTML = results.map((r, i) => {
-    const sim = r.similarity || 0;
-    const simPct = Math.round(sim * 100);
-    const color  = simColor(sim);
+  const html = results.map((r, i) => {
+    const isKeyword = r.match_type === 'keyword';
+    const simPct = isKeyword ? 100 : Math.round((r.similarity || 0) * 100);
+    const color  = isKeyword ? '#34d399' : simColor(r.similarity || 0);
     const catName = CAT_NAMES[r.category_code] || r.category_code;
+    const idx = startIdx + i;
 
     return `
-      <div class="result-card" id="card-${i}" style="animation-delay:${i*0.04}s" onclick="toggleCard(${i})">
+      <div class="result-card" id="card-${idx}" style="animation-delay:${i*0.04}s" onclick="toggleCard(${idx})">
         <div class="card-header">
           <div class="card-code">${r.code}</div>
           <div class="card-main">
@@ -587,8 +660,9 @@ function renderResults(results) {
             <div class="card-footer">
               <div class="cat-badge">${catName}</div>
               <div class="unit-badge">${r.unit || ''}</div>
+              ${isKeyword ? '<div class="keyword-badge">完全符合</div>' : ''}
               <div class="sim-wrap">
-                <div class="sim-label">相似度</div>
+                <div class="sim-label">${isKeyword ? '關鍵字' : '相似度'}</div>
                 <div class="sim-bar">
                   <div class="sim-fill" style="width:${simPct}%;background:${color}"></div>
                 </div>
@@ -628,7 +702,7 @@ function renderResults(results) {
             </div>
           </div>
           <div style="display:flex;gap:8px;margin-top:10px;">
-            <button class="copy-btn" id="copy-${i}" style="flex:1" onclick="copyCode(event, '${r.code}', ${i})">
+            <button class="copy-btn" id="copy-${idx}" style="flex:1" onclick="copyCode(event, '${r.code}', ${idx})">
               複製 IMPA Code：${r.code}
             </button>
             <a href="https://impa-catalogue.shipserv.com/search?type=IMPA&text=${r.code}"
@@ -646,13 +720,18 @@ function renderResults(results) {
             </a>
           </div>
           <button class="copy-btn" style="margin-top:8px;width:100%;color:var(--accent3);border-color:rgba(96,165,250,0.3);background:rgba(37,99,235,0.06);"
-            onclick="loadVariants(event, '${r.title.replace(/'/g,"\\'")}', '${r.code}', ${i})">
+            onclick="loadVariants(event, '${r.title.replace(/'/g,"\\'")}', '${r.code}', ${idx})">
             查看「${r.title}」的其他規格
           </button>
-          <div id="variants-${i}" style="margin-top:8px;display:none;"></div>
+          <div id="variants-${idx}" style="margin-top:8px;display:none;"></div>
         </div>
       </div>`;
   }).join('');
+  if (append) {
+    list.insertAdjacentHTML('beforeend', html);
+  } else {
+    list.innerHTML = html;
+  }
 }
 
 function toggleCard(i) {
