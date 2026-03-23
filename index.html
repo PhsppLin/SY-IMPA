@@ -367,40 +367,40 @@
     <div class="search-controls">
       <select class="cat-select" id="cat-select">
         <option value="all">全部分類</option>
-        <option value="00&10">食品與蔬菜</option>
-        <option value="11">健身與運動設備</option>
-        <option value="15">寢具與布品</option>
-        <option value="17">餐具與廚具</option>
-        <option value="19">手套與防護衣</option>
-        <option value="21">繩索與索具</option>
-        <option value="23">卸扣與索具配件</option>
-        <option value="25">船舶塗料</option>
-        <option value="27">噴漆設備</option>
-        <option value="31">安全頭盔與護具</option>
-        <option value="33">救生設備</option>
-        <option value="35">橡膠管與配件</option>
-        <option value="37">航行信號設備</option>
-        <option value="39">急救與醫療設備</option>
-        <option value="45">燃料與化學品</option>
-        <option value="47">文具與辦公用品</option>
-        <option value="49">門鎖與五金</option>
-        <option value="51">油漆刷與塗裝工具</option>
-        <option value="53">水管與衛浴配件</option>
-        <option value="55">清潔用品</option>
-        <option value="59">氣動工具</option>
-        <option value="61">手工具套組</option>
-        <option value="63">鑽頭與切削工具</option>
-        <option value="65">量測工具</option>
-        <option value="67">鋼材與金屬材料</option>
-        <option value="69">螺栓與螺帽</option>
-        <option value="71">鋼管與管材</option>
-        <option value="73">管件與接頭</option>
-        <option value="75">閥門</option>
-        <option value="77">軸承</option>
-        <option value="79">燈泡與電氣耗材</option>
-        <option value="81">填料與密封材料</option>
-        <option value="85">高壓氣體</option>
-        <option value="87">機械維修設備</option>
+        <option value="00&10">00&10 - 食品與蔬菜</option>
+        <option value="11">11 - 健身與運動設備</option>
+        <option value="15">15 - 寢具與布品</option>
+        <option value="17">17 - 餐具與廚具</option>
+        <option value="19">19 - 手套與防護衣</option>
+        <option value="21">21 - 繩索與索具</option>
+        <option value="23">23 - 卸扣與索具配件</option>
+        <option value="25">25 - 船舶塗料</option>
+        <option value="27">27 - 噴漆設備</option>
+        <option value="31">31 - 安全頭盔與護具</option>
+        <option value="33">33 - 救生設備</option>
+        <option value="35">35 - 橡膠管與配件</option>
+        <option value="37">37 - 航行信號設備</option>
+        <option value="39">39 - 急救與醫療設備</option>
+        <option value="45">45 - 燃料與化學品</option>
+        <option value="47">47 - 文具與辦公用品</option>
+        <option value="49">49 - 門鎖與五金</option>
+        <option value="51">51 - 油漆刷與塗裝工具</option>
+        <option value="53">53 - 水管與衛浴配件</option>
+        <option value="55">55 - 清潔用品</option>
+        <option value="59">59 - 氣動工具</option>
+        <option value="61">61 - 手工具套組</option>
+        <option value="63">63 - 鑽頭與切削工具</option>
+        <option value="65">65 - 量測工具</option>
+        <option value="67">67 - 鋼材與金屬材料</option>
+        <option value="69">69 - 螺栓與螺帽</option>
+        <option value="71">71 - 鋼管與管材</option>
+        <option value="73">73 - 管件與接頭</option>
+        <option value="75">75 - 閥門</option>
+        <option value="77">77 - 軸承</option>
+        <option value="79">79 - 燈泡與電氣耗材</option>
+        <option value="81">81 - 填料與密封材料</option>
+        <option value="85">85 - 高壓氣體</option>
+        <option value="87">87 - 機械維修設備</option>
       </select>
       <button class="search-btn" id="search-btn" onclick="doSearch()">
         <span>搜尋</span>
@@ -456,18 +456,18 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // 分類對照
 const CAT_NAMES = {
-  "00&10":"食品與蔬菜","11":"健身與運動設備","15":"寢具與布品",
-  "17":"餐具與廚具","19":"手套與防護衣","21":"繩索與索具",
-  "23":"卸扣與索具配件","25":"船舶塗料","27":"噴漆設備",
-  "31":"安全頭盔與護具","33":"救生設備","35":"橡膠管與配件",
-  "37":"航行信號設備","39":"急救與醫療設備","45":"燃料與化學品",
-  "47":"文具與辦公用品","49":"門鎖與五金","51":"油漆刷與塗裝工具",
-  "53":"水管與衛浴配件","55":"清潔用品","59":"氣動工具",
-  "61":"手工具套組","63":"鑽頭與切削工具","65":"量測工具",
-  "67":"鋼材與金屬材料","69":"螺栓與螺帽","71":"鋼管與管材",
-  "73":"管件與接頭","75":"閥門","77":"軸承",
-  "79":"燈泡與電氣耗材","81":"填料與密封材料","85":"高壓氣體",
-  "87":"機械維修設備"
+  "00&10":"00&10 食品與蔬菜","11":"11 健身與運動設備","15":"15 寢具與布品",
+  "17":"17 餐具與廚具","19":"19 手套與防護衣","21":"21 繩索與索具",
+  "23":"23 卸扣與索具配件","25":"25 船舶塗料","27":"27 噴漆設備",
+  "31":"31 安全頭盔與護具","33":"33 救生設備","35":"35 橡膠管與配件",
+  "37":"37 航行信號設備","39":"39 急救與醫療設備","45":"45 燃料與化學品",
+  "47":"47 文具與辦公用品","49":"49 門鎖與五金","51":"51 油漆刷與塗裝工具",
+  "53":"53 水管與衛浴配件","55":"55 清潔用品","59":"59 氣動工具",
+  "61":"61 手工具套組","63":"63 鑽頭與切削工具","65":"65 量測工具",
+  "67":"67 鋼材與金屬材料","69":"69 螺栓與螺帽","71":"71 鋼管與管材",
+  "73":"73 管件與接頭","75":"75 閥門","77":"77 軸承",
+  "79":"79 燈泡與電氣耗材","81":"81 填料與密封材料","85":"85 高壓氣體",
+  "87":"87 機械維修設備"
 };
 
 // ── AUTH ──
