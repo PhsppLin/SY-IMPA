@@ -131,23 +131,31 @@
     border-bottom: 0.5px solid var(--border);
     padding-bottom: 0.5rem;
   }
-  .search-box {
-    display: flex; gap: 8px; align-items: center;
+  .search-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .search-cell {
+    display: flex; align-items: center; gap: 8px;
     background: var(--surface);
     border: 0.5px solid var(--border2);
     border-radius: var(--radius);
-    padding: 12px 16px;
+    padding: 10px 14px;
     transition: border-color 0.2s;
-    margin-bottom: 10px;
   }
-  .search-box:focus-within { border-color: var(--accent); }
-  .search-icon { font-size: 18px; color: var(--text3); flex-shrink: 0; }
+  .search-cell:focus-within { border-color: var(--accent); }
+  .search-cell-label {
+    font-size: 10px; color: var(--text3);
+    white-space: nowrap; letter-spacing: 0.04em; flex-shrink: 0;
+  }
   .search-input {
     flex: 1; background: none; border: none; outline: none;
-    color: var(--text); font-size: 15px;
-    font-family: 'Noto Sans TC', sans-serif;
+    color: var(--text); font-size: 14px;
+    font-family: 'Noto Sans TC', sans-serif; min-width: 0;
   }
-  .search-input::placeholder { color: var(--text3); }
+  .search-input::placeholder { color: var(--text3); font-size: 12px; }
   .search-controls { display: flex; gap: 8px; }
   .cat-select {
     flex: 1; padding: 9px 12px;
@@ -359,10 +367,27 @@
 
   <div class="search-sticky">
   <div class="search-area">
-    <div class="search-box">
-      <span class="search-icon">🔍</span>
-      <input class="search-input" id="search-input" type="text"
-        placeholder="用任何描述搜尋，例如：充氣救生筏 6人、直徑8mm馬尼拉繩、bronze valve small size">
+    <div class="search-grid">
+      <div class="search-cell">
+        <span class="search-cell-label">關鍵字 1</span>
+        <input class="search-input" id="search-input-1" type="text"
+          placeholder="例：夾子、valve、8mm">
+      </div>
+      <div class="search-cell">
+        <span class="search-cell-label">關鍵字 2</span>
+        <input class="search-input" id="search-input-2" type="text"
+          placeholder="例：250、bronze、不鏽鋼">
+      </div>
+      <div class="search-cell">
+        <span class="search-cell-label">關鍵字 3</span>
+        <input class="search-input" id="search-input-3" type="text"
+          placeholder="例：safety、6人、螺栓">
+      </div>
+      <div class="search-cell">
+        <span class="search-cell-label">關鍵字 4</span>
+        <input class="search-input" id="search-input-4" type="text"
+          placeholder="例：M12、rescue、10mm">
+      </div>
     </div>
     <div class="search-controls">
       <select class="cat-select" id="cat-select">
@@ -515,7 +540,9 @@ sb.auth.getSession().then(({ data: { session } }) => {
 
 document.getElementById('pw-input').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 document.getElementById('email-input').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('pw-input').focus(); });
-document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+['search-input-1','search-input-2','search-input-3','search-input-4'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+});
 
 // ── SEARCH ──
 let currentQuery = '';
@@ -524,12 +551,18 @@ let currentOffset = 0;
 const PAGE_SIZE   = 10;
 
 function quickSearch(text) {
-  document.getElementById('search-input').value = text;
+  document.getElementById('search-input-1').value = text;
+  document.getElementById('search-input-2').value = '';
+  document.getElementById('search-input-3').value = '';
+  document.getElementById('search-input-4').value = '';
   doSearch();
 }
 
 function clearSearch() {
-  document.getElementById('search-input').value = '';
+  document.getElementById('search-input-1').value = '';
+  document.getElementById('search-input-2').value = '';
+  document.getElementById('search-input-3').value = '';
+  document.getElementById('search-input-4').value = '';
   document.getElementById('cat-select').value = 'all';
   document.getElementById('results-list').innerHTML = '';
   document.getElementById('result-meta').style.display = 'none';
@@ -541,7 +574,13 @@ function clearSearch() {
 }
 
 async function doSearch() {
-  const query = document.getElementById('search-input').value.trim();
+  const parts = [
+    document.getElementById('search-input-1').value.trim(),
+    document.getElementById('search-input-2').value.trim(),
+    document.getElementById('search-input-3').value.trim(),
+    document.getElementById('search-input-4').value.trim(),
+  ].filter(Boolean);
+  const query = parts.join(' ');
   const cat   = document.getElementById('cat-select').value;
   const btn   = document.getElementById('search-btn');
 
@@ -690,6 +729,16 @@ function renderResults(results, append = false, startIdx = 0) {
           <div class="detail-section">
             <div class="detail-heading">中文規格</div>
             <div class="detail-text-cht">${r.specification_cht}</div>
+          </div>` : ''}
+          ${r.description ? `
+          <div class="detail-section">
+            <div class="detail-heading">英文描述</div>
+            <div class="detail-text">${r.description}</div>
+          </div>` : ''}
+          ${r.description_cht ? `
+          <div class="detail-section">
+            <div class="detail-heading">中文描述</div>
+            <div class="detail-text-cht">${r.description_cht}</div>
           </div>` : ''}
           <div class="detail-grid">
             <div class="detail-item">
