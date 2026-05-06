@@ -332,6 +332,12 @@
   .load-more-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+  @media (max-width: 480px) {
+    .search-grid { grid-template-columns: 1fr; }
+    .search-cell-label { font-size: 11px; min-width: 48px; }
+    .search-input { font-size: 15px; }
+  }
+
   @media (min-width: 640px) {
     .search-area, .quick-tags, .results-area { padding-left: 1.5rem; padding-right: 1.5rem; }
     .top-bar { padding: 0.75rem 1.5rem; }
@@ -394,7 +400,7 @@
     <div class="search-controls">
       <select class="cat-select" id="cat-select">
         <option value="all">全部分類</option>
-        <option value="00&10">00&10 - 食品與蔬菜</option>
+        <option value="00&#38;10">00&#38;10 - 食品與蔬菜</option>
         <option value="11">11 - 健身與運動設備</option>
         <option value="15">15 - 寢具與布品</option>
         <option value="17">17 - 餐具與廚具</option>
@@ -439,12 +445,12 @@
     <div class="quick-label">熱門搜尋</div>
     <div class="tag-row">
       <span class="q-tag" onclick="quickSearch('救生筏')">救生筏</span>
-      <span class="q-tag" onclick="quickSearch('gate valve')">gate valve</span>
+      <span class="q-tag" onclick="quickSearch('銅閥')">銅閥</span>
       <span class="q-tag" onclick="quickSearch('馬尼拉繩')">馬尼拉繩</span>
-      <span class="q-tag" onclick="quickSearch('safety helmet')">Safety helmet</span>
-      <span class="q-tag" onclick="quickSearch('燈泡')">燈泡</span>
-      <span class="q-tag" onclick="quickSearch('bronze')">bronze</span>
-      <span class="q-tag" onclick="quickSearch('卸克')">卸克</span>
+      <span class="q-tag" onclick="quickSearch('安全帽')">安全帽</span>
+      <span class="q-tag" onclick="quickSearch('扳手')">扳手</span>
+      <span class="q-tag" onclick="quickSearch('軸承')">軸承</span>
+      <span class="q-tag" onclick="quickSearch('氧氣瓶')">氧氣瓶</span>
     </div>
   </div>
   </div>
