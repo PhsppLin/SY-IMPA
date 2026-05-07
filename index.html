@@ -290,6 +290,7 @@
     background: rgba(52,211,153,0.12); color: #34d399;
     border: 0.5px solid rgba(52,211,153,0.25);
   }
+  .copy-btn {
     margin-top: 10px; width: 100%; padding: 8px;
     background: rgba(37,99,235,0.1);
     border: 0.5px solid rgba(37,99,235,0.3);
@@ -651,9 +652,9 @@ async function fetchResults(query, cat, offset) {
 }
 
 function simColor(sim) {
-  if (sim >= 0.75) return '#fbbf24';  // 亮黃
-  if (sim >= 0.55) return '#fbbf24';  // 亮黃
-  return '#fbbf24';                    // 統一亮黃，讓數字清晰可見
+  if (sim >= 0.75) return '#34d399';  // 高相似度：綠
+  if (sim >= 0.55) return '#fbbf24';  // 中相似度：黃
+  return '#94a3b8';                   // 低相似度：灰
 }
 
 function renderResults(results, append = false, startIdx = 0) {
