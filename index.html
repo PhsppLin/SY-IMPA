@@ -478,6 +478,17 @@ const CAT_NAMES = {
   "87":"87 機械維修設備"
 };
 
+// ── HTML escape：避免使用者資料含 < > & " ' 破版或被當 HTML 解析 ──
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ── AUTH ──
 async function doLogin() {
   const email = document.getElementById('email-input').value.trim();
@@ -665,17 +676,18 @@ function renderResults(results, append = false, startIdx = 0) {
     const color  = isKeyword ? '#34d399' : simColor(r.similarity || 0);
     const catName = CAT_NAMES[r.category_code] || r.category_code;
     const idx = startIdx + i;
+    const codeUrl = encodeURIComponent(r.code || '');
 
     return `
-      <div class="result-card" id="card-${idx}" style="animation-delay:${i*0.04}s" onclick="toggleCard(${idx})">
+      <div class="result-card" id="card-${idx}" style="animation-delay:${i*0.04}s" data-action="toggle-card" data-card-idx="${idx}">
         <div class="card-header">
-          <div class="card-code">${r.code}</div>
+          <div class="card-code">${esc(r.code)}</div>
           <div class="card-main">
-            <div class="card-title">${r.title || ''}</div>
-            <div class="card-title-cht">${r.title_cht || ''}</div>
+            <div class="card-title">${esc(r.title) || ''}</div>
+            <div class="card-title-cht">${esc(r.title_cht) || ''}</div>
             <div class="card-footer">
-              <div class="cat-badge">${catName}</div>
-              <div class="unit-badge">${r.unit || ''}</div>
+              <div class="cat-badge">${esc(catName)}</div>
+              <div class="unit-badge">${esc(r.unit) || ''}</div>
               ${isKeyword ? '<div class="keyword-badge">完全符合</div>' : ''}
               <div class="sim-wrap">
                 <div class="sim-label">${isKeyword ? '關鍵字' : '相似度'}</div>
@@ -692,35 +704,35 @@ function renderResults(results, append = false, startIdx = 0) {
           ${r.specification ? `
           <div class="detail-section">
             <div class="detail-heading">英文規格</div>
-            <div class="detail-text">${r.specification}</div>
+            <div class="detail-text">${esc(r.specification)}</div>
           </div>` : ''}
           ${r.specification_cht ? `
           <div class="detail-section">
             <div class="detail-heading">中文規格</div>
-            <div class="detail-text-cht">${r.specification_cht}</div>
+            <div class="detail-text-cht">${esc(r.specification_cht)}</div>
           </div>` : ''}
           ${r.description ? `
           <div class="detail-section">
             <div class="detail-heading">英文描述</div>
-            <div class="detail-text">${r.description}</div>
+            <div class="detail-text">${esc(r.description)}</div>
           </div>` : ''}
           ${r.description_cht ? `
           <div class="detail-section">
             <div class="detail-heading">中文描述</div>
-            <div class="detail-text-cht-desc">${r.description_cht}</div>
+            <div class="detail-text-cht-desc">${esc(r.description_cht)}</div>
           </div>` : ''}
           <div class="detail-grid">
             <div class="detail-item">
               <div class="detail-item-label">分類</div>
-              <div class="detail-item-val" style="font-size:12px">${catName}</div>
+              <div class="detail-item-val" style="font-size:12px">${esc(catName)}</div>
             </div>
             <div class="detail-item">
               <div class="detail-item-label">單位</div>
-              <div class="detail-item-val">${r.unit || '—'}</div>
+              <div class="detail-item-val">${esc(r.unit) || '—'}</div>
             </div>
             <div class="detail-item">
               <div class="detail-item-label">頁碼</div>
-              <div class="detail-item-val">${r.page_no || '—'}</div>
+              <div class="detail-item-val">${esc(r.page_no) || '—'}</div>
             </div>
             <div class="detail-item">
               <div class="detail-item-label">相似度</div>
@@ -728,11 +740,13 @@ function renderResults(results, append = false, startIdx = 0) {
             </div>
           </div>
           <div style="display:flex;gap:8px;margin-top:10px;">
-            <button class="copy-btn" id="copy-${idx}" style="flex:1" onclick="copyCode(event, '${r.code}', ${idx})">
-              複製 IMPA Code：${r.code}
+            <button class="copy-btn" id="copy-${idx}" style="flex:1"
+                    data-action="copy-code" data-code="${esc(r.code)}" data-card-idx="${idx}">
+              複製 IMPA Code：${esc(r.code)}
             </button>
-            <a href="https://impa-catalogue.shipserv.com/search?type=IMPA&text=${r.code}"
+            <a href="https://impa-catalogue.shipserv.com/search?type=IMPA&text=${codeUrl}"
                target="_blank"
+               data-action="stop"
                style="flex:1;display:flex;align-items:center;justify-content:center;
                       padding:8px;border-radius:var(--radius-sm);
                       background:rgba(255,255,255,0.04);
@@ -740,14 +754,14 @@ function renderResults(results, append = false, startIdx = 0) {
                       color:var(--text2);font-size:12px;font-weight:500;
                       text-decoration:none;transition:background 0.2s;"
                onmouseover="this.style.background='rgba(255,255,255,0.08)'"
-               onmouseout="this.style.background='rgba(255,255,255,0.04)'"
-               onclick="event.stopPropagation()">
+               onmouseout="this.style.background='rgba(255,255,255,0.04)'">
               查看商品圖片 ↗
             </a>
           </div>
-          <button class="copy-btn" style="margin-top:8px;width:100%;color:var(--accent3);border-color:rgba(96,165,250,0.3);background:rgba(37,99,235,0.06);"
-            onclick="loadVariants(event, '${r.title.replace(/'/g,"\\'")}', '${r.code}', ${idx})">
-            查看「${r.title}」的其他規格
+          <button class="copy-btn"
+                  style="margin-top:8px;width:100%;color:var(--accent3);border-color:rgba(96,165,250,0.3);background:rgba(37,99,235,0.06);"
+                  data-action="load-variants" data-title="${esc(r.title)}" data-code="${esc(r.code)}" data-card-idx="${idx}">
+            查看「${esc(r.title)}」的其他規格
           </button>
           <div id="variants-${idx}" style="margin-top:8px;display:none;"></div>
         </div>
@@ -810,24 +824,26 @@ async function loadVariants(e, title, currentCode, cardIdx) {
       <div style="font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:0.05em;">
         同系列其他 ${data.length} 種規格
       </div>` +
-      data.map(v => `
+      data.map(v => {
+        const vCodeUrl = encodeURIComponent(v.code || '');
+        return `
         <div style="background:var(--surface2);border-radius:6px;padding:8px 10px;margin-bottom:5px;
                     border:0.5px solid var(--border);">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-            <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2)">${v.code}</span>
-            <span style="font-size:10px;color:var(--text3)">${v.unit || ''}</span>
+            <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2)">${esc(v.code)}</span>
+            <span style="font-size:10px;color:var(--text3)">${esc(v.unit) || ''}</span>
           </div>
-          <div style="font-size:11px;color:var(--text);line-height:1.5;margin-bottom:2px;">${v.specification || ''}</div>
-          <div style="font-size:11px;color:var(--text2);line-height:1.5;">${v.specification_cht || ''}</div>
+          <div style="font-size:11px;color:var(--text);line-height:1.5;margin-bottom:2px;">${esc(v.specification) || ''}</div>
+          <div style="font-size:11px;color:var(--text2);line-height:1.5;">${esc(v.specification_cht) || ''}</div>
           <div style="display:flex;gap:6px;margin-top:6px;">
-            <button onclick="event.stopPropagation();navigator.clipboard.writeText('${v.code}');this.textContent='✓ 已複製';setTimeout(()=>this.textContent='複製',2000)"
+            <button data-action="copy-variant" data-code="${esc(v.code)}"
               style="flex:1;padding:5px;background:rgba(37,99,235,0.1);border:0.5px solid rgba(37,99,235,0.25);
                      border-radius:5px;color:var(--accent2);font-size:11px;cursor:pointer;
                      font-family:'Noto Sans TC',sans-serif;">
               複製
             </button>
-            <a href="https://impa-catalogue.shipserv.com/search?type=IMPA&text=${v.code}"
-               target="_blank" onclick="event.stopPropagation()"
+            <a href="https://impa-catalogue.shipserv.com/search?type=IMPA&text=${vCodeUrl}"
+               target="_blank" data-action="stop"
                style="flex:1;display:flex;align-items:center;justify-content:center;
                       padding:5px;background:rgba(255,255,255,0.04);
                       border:0.5px solid var(--border2);border-radius:5px;
@@ -835,11 +851,39 @@ async function loadVariants(e, title, currentCode, cardIdx) {
               查看圖片 ↗
             </a>
           </div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
   } catch(err) {
-    container.innerHTML = `<div style="font-size:12px;color:var(--text3);padding:8px 0;">載入失敗：${err.message}</div>`;
+    container.innerHTML = `<div style="font-size:12px;color:var(--text3);padding:8px 0;">載入失敗：${esc(err.message)}</div>`;
   }
 }
+
+// ── 事件委派：把所有 data-action 統一在 document 層級接 ──
+// 取代原本 inline onclick="..." 的寫法，避免使用者資料混進 HTML 屬性
+document.addEventListener('click', (e) => {
+  const target = e.target.closest('[data-action]');
+  if (!target) return;
+  const action = target.dataset.action;
+
+  if (action === 'toggle-card') {
+    toggleCard(+target.dataset.cardIdx);
+  } else if (action === 'copy-code') {
+    e.stopPropagation();
+    copyCode(e, target.dataset.code, +target.dataset.cardIdx);
+  } else if (action === 'load-variants') {
+    e.stopPropagation();
+    loadVariants(e, target.dataset.title, target.dataset.code, +target.dataset.cardIdx);
+  } else if (action === 'copy-variant') {
+    e.stopPropagation();
+    const code = target.dataset.code;
+    navigator.clipboard.writeText(code).then(() => {
+      target.textContent = '✓ 已複製';
+      setTimeout(() => { target.textContent = '複製'; }, 2000);
+    });
+  } else if (action === 'stop') {
+    e.stopPropagation();
+  }
+});
 </script>
 </body>
 </html>
